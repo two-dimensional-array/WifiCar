@@ -1,0 +1,62 @@
+name: Build
+
+on: [push]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Pull project
+      uses: actions/checkout@v4
+      with:
+          submodules: 'recursive'
+        
+    - name: Install packages
+      run: sudo apt-get install gcc git wget make libncurses-dev flex bison gperf python-is-python3
+    
+    - name: Restore SDK Cache
+      uses: actions/cache/restore@v4
+      id: sdk-cache
+      with:
+        path: ESP8266_RTOS_SDK/
+        key: esp8266-rtos-sdk
+    
+    - name: Download SDK
+      if: steps.sdk-cache.outputs.cache-hit != 'true'
+      run : git clone --recursive https://github.com/espressif/ESP8266_RTOS_SDK.git
+      
+    - name: Save SDK Cache
+      if: steps.sdk-cache.outputs.cache-hit != 'true'
+      uses: actions/cache/save@v4
+      with:
+        path: ESP8266_RTOS_SDK/
+        key: esp8266-rtos-sdk
+        
+    - name: Restore SDK environment cache
+      uses: actions/cache/restore@v4
+      id: sdk-env-cache
+      with:
+        path: ~/.espressif/
+        key: ${{ runner.os }}-sdk-env
+        
+    - name: Build with setup env
+      run: |
+        ./ESP8266_RTOS_SDK/install.sh
+        . ./ESP8266_RTOS_SDK/export.sh
+        make -j -s
+      
+    - name: Save SDK environment cache
+      uses: actions/cache/save@v4
+      if: steps.sdk-env-cache.outputs.cache-hit != 'true'
+      with:
+        path: ~/.espressif/
+        key: ${{ runner.os }}-sdk-env
+  
+    - name: Download firmware
+      uses: actions/upload-artifact@v4
+      with:
+        name: Template
+        path: |
+          build/bootloader/bootloader.*
+          build/partitions_singleapp.*
+          build/template.*

@@ -1,0 +1,12 @@
+eclipse.preferences.version=1
+environment/project/cdt.managedbuild.toolchain.gnu.cross.base.1534506259/BATCH_BUILD/delimiter=;
+environment/project/cdt.managedbuild.toolchain.gnu.cross.base.1534506259/BATCH_BUILD/operation=append
+environment/project/cdt.managedbuild.toolchain.gnu.cross.base.1534506259/BATCH_BUILD/value=1
+environment/project/cdt.managedbuild.toolchain.gnu.cross.base.1534506259/IDF_PATH/delimiter=;
+environment/project/cdt.managedbuild.toolchain.gnu.cross.base.1534506259/IDF_PATH/operation=replace
+environment/project/cdt.managedbuild.toolchain.gnu.cross.base.1534506259/IDF_PATH/value=C\:\\ESP\\ESP8266_RTOS_SDK
+environment/project/cdt.managedbuild.toolchain.gnu.cross.base.1534506259/PATH/delimiter=;
+environment/project/cdt.managedbuild.toolchain.gnu.cross.base.1534506259/PATH/operation=replace
+environment/project/cdt.managedbuild.toolchain.gnu.cross.base.1534506259/PATH/value=C\:\\msys32\\usr\\bin;C\:\\msys32\\mingw32\\bin;C\:\\Users\\2D Array\\.espressif\\tools\\xtensa-lx106-elf\\esp-2020r3-49-gd5524c1-8.4.0\\xtensa-lx106-elf\\bin
+environment/project/cdt.managedbuild.toolchain.gnu.cross.base.1534506259/append=true
+environment/project/cdt.managedbuild.toolchain.gnu.cross.base.1534506259/appendContributed=true
