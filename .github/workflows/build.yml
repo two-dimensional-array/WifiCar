@@ -59,4 +59,4 @@ jobs:
         path: |
           build/bootloader/bootloader.*
           build/partitions_singleapp.*
-          build/template.*
+          build/WifiCar.*
