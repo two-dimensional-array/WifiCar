@@ -1,5 +1,5 @@
-#ifndef COMPONENTS_UDPSERVER_UDP_SERVER_H_
-#define COMPONENTS_UDPSERVER_UDP_SERVER_H_
+#ifndef __UDPSERVER_UDP_SERVER_H__
+#define __UDPSERVER_UDP_SERVER_H__
 
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
@@ -9,4 +9,4 @@
 
 void UDPServerStart(RingbufHandle_t udpReciveData);
 
-#endif /* COMPONENTS_UDPSERVER_UDP_SERVER_H_ */
+#endif /* __UDPSERVER_UDP_SERVER_H__ */
