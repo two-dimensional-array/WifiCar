@@ -43,6 +43,14 @@ static void DispatcherTask(void *pvParameters)
 	vTaskDelete(NULL);
 }
 
+static void IDLETask(void *pvParameters)
+{
+	for (;;)
+	{
+		esp_task_wdt_reset();
+	}
+}
+
 void app_main()
 {
     ESP_ERROR_CHECK(nvs_flash_init());
@@ -56,4 +64,5 @@ void app_main()
     WifiAPInit();
     UDPServerStart(udpReciveData);
     xTaskCreate(DispatcherTask, "dispatcher", 4096, udpReciveData, 5, NULL);
+    xTaskCreate(IDLETask, "idle", 1024, NULL, tskIDLE_PRIORITY, NULL);
 }
