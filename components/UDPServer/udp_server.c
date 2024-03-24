@@ -49,12 +49,12 @@ static void UDPServerTask(void *pvParameters)
         if (err < 0) {
             ESP_LOGE(TAG, "Socket unable to bind: errno %d", errno);
         }
-        ESP_LOGD(TAG, "Socket binded");
+        ESP_LOGI(TAG, "Socket binded");
 
         for(;;)
         {
         	esp_task_wdt_reset();
-            ESP_LOGD(TAG, "Waiting for data");
+            ESP_LOGI(TAG, "Waiting for data");
             struct sockaddr_in sourceAddr;
             socklen_t socklen = sizeof(sourceAddr);
             int len = recvfrom(sock, rx_buffer, sizeof(rx_buffer) - 1, 0, (struct sockaddr *)&sourceAddr, &socklen);
@@ -69,8 +69,8 @@ static void UDPServerTask(void *pvParameters)
                 // Get the sender's ip address as string
                 inet_ntoa_r(((struct sockaddr_in *)&sourceAddr)->sin_addr.s_addr, addr_str, sizeof(addr_str) - 1);
                 rx_buffer[len] = 0; // Null-terminate whatever we received and treat like a string...
-                ESP_LOGD(TAG, "Received %d bytes from %s:", len, addr_str);
-                ESP_LOGD(TAG, "%s", rx_buffer);
+                ESP_LOGI(TAG, "Received %d bytes from %s:", len, addr_str);
+                ESP_LOGI(TAG, "%s", rx_buffer);
 
 //                int err = sendto(sock, rx_buffer, len, 0, (struct sockaddr *)&sourceAddr, sizeof(sourceAddr));
 //                if (err < 0) {

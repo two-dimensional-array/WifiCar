@@ -32,7 +32,7 @@ static void onAPSTAConnected(void *arg, esp_event_base_t event_base, int32_t eve
 {
 	if (arg != NULL) {
 	    system_event_ap_staconnected_t *event = (system_event_ap_staconnected_t *)arg;
-	    ESP_LOGD(TAG, "station "MACSTR" join, AID=%d",
+	    ESP_LOGI(TAG, "station "MACSTR" join, AID=%d",
 	                     MAC2STR(event->mac), event->aid);
 	}
 
@@ -43,7 +43,7 @@ static void onAPSTAIDAssigned(void *arg, esp_event_base_t event_base, int32_t ev
 {
 	if (arg != NULL) {
 		ip_event_ap_staipassigned_t *event = (ip_event_ap_staipassigned_t *)arg;
-		ESP_LOGD(TAG, "IPv4 address: " IPSTR, IP2STR(&event->ip));
+		ESP_LOGI(TAG, "IPv4 address: " IPSTR, IP2STR(&event->ip));
 	}
     xEventGroupSetBits(wifiEventGroup, AP_STAIPASSIGNED);
 }
