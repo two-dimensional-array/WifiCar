@@ -4,7 +4,6 @@
 #include "motor_driver.h"
 
 void MotorInit(void);
-void MotorTaskStart(void);
 void MotorControl(char direction);
 
 #endif // __MOTOR_MOTOR_H__

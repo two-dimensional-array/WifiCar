@@ -2,10 +2,9 @@
 
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
-#include "freertos/semphr.h"
+#include "freertos/timers.h"
 
 #include "esp_log.h"
-#include "esp_task_wdt.h"
 
 #define MOTOR_GPIO_PIN_MASK \
 	( \
@@ -22,10 +21,16 @@ static float pwmPhases[2] = {0.0, 0.0};
 static motor_driver_t motorDriver;
 
 static char motorDirection = 0x00;
-static uint32_t motorTimeout;
-static SemaphoreHandle_t motorMutex;
+static TimerHandle_t motorStopTimer;
 
 static const char *TAG = "motor";
+
+static void MotorStopCallback(TimerHandle_t xTimer)
+{
+	ESP_LOGI(TAG, "End state: %c", motorDirection);
+	MotorDriverStop(&motorDriver);
+	motorDirection = 0x00;
+}
 
 void MotorInit(void)
 {
@@ -47,75 +52,37 @@ void MotorInit(void)
 	pwm_set_phases(pwmPhases);
 	pwm_start();
 	MotorDriverStop(&motorDriver);
-}
-
-static void MotorControlTask(void *pvParameters)
-{
-	motorDirection = 0x00;
-	motorTimeout = xTaskGetTickCount();
-
-	for(;;)
-	{
-		esp_task_wdt_reset();
-		if (xSemaphoreTake(motorMutex, 0))
-		{
-			uint32_t current_time = xTaskGetTickCount();
-			uint32_t delta = (current_time < motorTimeout) ? ((UINT32_MAX - motorTimeout) + current_time) : (current_time - motorTimeout);
-			if (delta > (500 / portTICK_PERIOD_MS))
-			{
-				if (motorDirection != 0x00)
-				{
-					ESP_LOGD(TAG, "End state: %c\n\r", motorDirection);
-					MotorDriverStop(&motorDriver);
-					motorDirection = 0x00;
-				}
-				motorTimeout = xTaskGetTickCount();
-			}
-			xSemaphoreGive(motorMutex);
-		}
-	}
-
-	vTaskDelete(NULL);
-}
-
-void MotorTaskStart(void)
-{
-	motorMutex = xSemaphoreCreateMutex();
-	xTaskCreate(MotorControlTask, "MotorControlTask", 4096, NULL, 5, NULL);
+	motorStopTimer = xTimerCreate("MotorStop", pdMS_TO_TICKS(1000), false, NULL, MotorStopCallback);
 }
 
 void MotorControl(char direction)
 {
-	if (xSemaphoreTake(motorMutex, portMAX_DELAY))
+	xTimerReset(motorStopTimer, pdMS_TO_TICKS(0));
+	if (motorDirection != direction)
 	{
-		if (motorDirection != direction)
+		if (motorDirection != 0x00)
 		{
-			if (motorDirection != 0x00)
-			{
-				ESP_LOGD(TAG, "End state: %c\n\r", motorDirection);
-			}
-			motorDirection = direction;
-			ESP_LOGD(TAG, "Start state: %c\n\r", motorDirection);
-			switch (motorDirection)
-			{
-				case 'f':
-					MotorDriverRunForward(&motorDriver, MOTOR_DRIVER_PWM_PERIOD);
-					break;
-				case 'b':
-					MotorDriverRunBackward(&motorDriver, MOTOR_DRIVER_PWM_PERIOD);
-					break;
-				case 'l':
-					MotorDriverRunLeft(&motorDriver, MOTOR_DRIVER_PWM_PERIOD);
-					break;
-				case 'r':
-					MotorDriverRunRight(&motorDriver, MOTOR_DRIVER_PWM_PERIOD);
-					break;
-				default:
-					break;
-			}
+			ESP_LOGI(TAG, "End state: %c", motorDirection);
 		}
-		motorTimeout = xTaskGetTickCount();
-		xSemaphoreGive(motorMutex);
+		motorDirection = direction;
+		ESP_LOGI(TAG, "Start state: %c", motorDirection);
+		switch (motorDirection)
+		{
+			case 'f':
+				MotorDriverRunForward(&motorDriver, MOTOR_DRIVER_PWM_PERIOD);
+				break;
+			case 'b':
+				MotorDriverRunBackward(&motorDriver, MOTOR_DRIVER_PWM_PERIOD);
+				break;
+			case 'l':
+				MotorDriverRunLeft(&motorDriver, MOTOR_DRIVER_PWM_PERIOD);
+				break;
+			case 'r':
+				MotorDriverRunRight(&motorDriver, MOTOR_DRIVER_PWM_PERIOD);
+				break;
+			default:
+				break;
+		}
 	}
 }
 

@@ -31,7 +31,7 @@ static void DispatcherTask(void *pvParameters)
 	for (;;)
 	{
 		size_t msgSize = 0;
-		char* msgData = xRingbufferReceive(udpReciveData, &msgSize, 0);
+		char* msgData = xRingbufferReceive(udpReciveData, &msgSize, portMAX_DELAY);
 		if (msgData != NULL && msgSize > 0)
 		{
 			MotorControl(msgData[0]); // Need implement decoding msg's
@@ -54,7 +54,6 @@ void app_main()
 
     MotorInit();
     WifiAPInit();
-    MotorTaskStart();
     UDPServerStart(udpReciveData);
     xTaskCreate(DispatcherTask, "dispatcher", 4096, udpReciveData, 5, NULL);
 }
