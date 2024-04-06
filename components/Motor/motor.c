@@ -20,16 +20,15 @@ static uint32_t pwmDuties[2] = {0, 0};
 static float pwmPhases[2] = {0.0, 0.0};
 static motor_driver_t motorDriver;
 
-static char motorDirection = 0x00;
+static motor_state_t motorDirection = MOTOR_STATE_STOP;
 static TimerHandle_t motorStopTimer;
 
 static const char *TAG = "motor";
 
 static void MotorStopCallback(TimerHandle_t xTimer)
 {
-	ESP_LOGI(TAG, "End state: %c", motorDirection);
 	MotorDriverStop(&motorDriver);
-	motorDirection = 0x00;
+	motorDirection = MOTOR_STATE_STOP;
 }
 
 void MotorInit(void)
@@ -52,35 +51,53 @@ void MotorInit(void)
 	pwm_set_phases(pwmPhases);
 	pwm_start();
 	MotorDriverStop(&motorDriver);
-	motorStopTimer = xTimerCreate("MotorStop", pdMS_TO_TICKS(1000), false, NULL, MotorStopCallback);
+	motorStopTimer = xTimerCreate("MotorStop", pdMS_TO_TICKS(700), false, NULL, MotorStopCallback);
 }
 
-void MotorControl(char direction)
+void MotorControl(motor_state_t direction)
 {
 	xTimerReset(motorStopTimer, pdMS_TO_TICKS(0));
 	if (motorDirection != direction)
 	{
-		if (motorDirection != 0x00)
-		{
-			ESP_LOGI(TAG, "End state: %c", motorDirection);
-		}
 		motorDirection = direction;
-		ESP_LOGI(TAG, "Start state: %c", motorDirection);
 		switch (motorDirection)
 		{
-			case 'f':
+			case MOTOR_STATE_FORWARD_LEFT:
+				MotorRunForward(&motorDriver.left, MOTOR_DRIVER_PWM_PERIOD);
+			    MotorRunBackward(&motorDriver.right, MOTOR_DRIVER_PWM_PERIOD / 2);
+			    MOTOR_DRIVER_SET_GPIO_STATE(&motorDriver.stby, true);
+			    break;
+			case MOTOR_STATE_FORWARD:
 				MotorDriverRunForward(&motorDriver, MOTOR_DRIVER_PWM_PERIOD);
 				break;
-			case 'b':
+			case MOTOR_STATE_FORWARD_RIGHT:
+				MotorRunBackward(&motorDriver.left, MOTOR_DRIVER_PWM_PERIOD / 2);
+				MotorRunForward(&motorDriver.right, MOTOR_DRIVER_PWM_PERIOD);
+				MOTOR_DRIVER_SET_GPIO_STATE(&motorDriver.stby, true);
+				break;
+			case MOTOR_STATE_BACKWARD_LEFT:
+				MotorRunBackward(&motorDriver.left, MOTOR_DRIVER_PWM_PERIOD);
+				MotorRunForward(&motorDriver.right, MOTOR_DRIVER_PWM_PERIOD / 2);
+				MOTOR_DRIVER_SET_GPIO_STATE(&motorDriver.stby, true);
+				break;
+			case MOTOR_STATE_BACKWARD:
 				MotorDriverRunBackward(&motorDriver, MOTOR_DRIVER_PWM_PERIOD);
 				break;
-			case 'l':
+			case MOTOR_STATE_BACKWARD_RIGHT:
+				MotorRunForward(&motorDriver.left, MOTOR_DRIVER_PWM_PERIOD / 2);
+				MotorRunBackward(&motorDriver.right, MOTOR_DRIVER_PWM_PERIOD);
+				MOTOR_DRIVER_SET_GPIO_STATE(&motorDriver.stby, true);
+				break;
+			case MOTOR_STATE_LEFT:
 				MotorDriverRunLeft(&motorDriver, MOTOR_DRIVER_PWM_PERIOD);
 				break;
-			case 'r':
+			case MOTOR_STATE_RIGHT:
 				MotorDriverRunRight(&motorDriver, MOTOR_DRIVER_PWM_PERIOD);
 				break;
 			default:
+				xTimerStop(motorStopTimer, pdMS_TO_TICKS(0));
+				MotorDriverStop(&motorDriver);
+				motorDirection = MOTOR_STATE_STOP;
 				break;
 		}
 	}

@@ -15,7 +15,28 @@
 #include "motor.h"
 #include "udp_server.h"
 
+#include <string.h>
+
 static const char *TAG = "main";
+
+typedef struct
+{
+	const char* str;
+	motor_state_t state;
+} dispatcher_motor_t;
+
+static const dispatcher_motor_t dispatcherMotor[MOTOR_STATE_AMOUNT] =
+{
+	{"ss", MOTOR_STATE_STOP},
+	{"fl", MOTOR_STATE_FORWARD_LEFT},
+	{"ff", MOTOR_STATE_FORWARD},
+	{"fr", MOTOR_STATE_FORWARD_RIGHT},
+	{"ll", MOTOR_STATE_LEFT},
+	{"rr", MOTOR_STATE_RIGHT},
+	{"bl", MOTOR_STATE_BACKWARD_LEFT},
+	{"bb", MOTOR_STATE_BACKWARD},
+	{"br", MOTOR_STATE_BACKWARD_RIGHT},
+};
 
 static void DispatcherTask(void *pvParameters)
 {
@@ -34,7 +55,13 @@ static void DispatcherTask(void *pvParameters)
 		char* msgData = xRingbufferReceive(udpReciveData, &msgSize, portMAX_DELAY);
 		if (msgData != NULL && msgSize > 0)
 		{
-			MotorControl(msgData[0]); // Need implement decoding msg's
+			for (size_t i = 0; i < MOTOR_STATE_AMOUNT; i++)
+			{
+				if (strncmp(dispatcherMotor[i].str, msgData, (msgSize <= 2) ? msgSize : 2) == 0)
+				{
+					MotorControl(dispatcherMotor[i].state);
+				}
+			}
 			vRingbufferReturnItem(udpReciveData, msgData);
 		}
 		esp_task_wdt_reset();
